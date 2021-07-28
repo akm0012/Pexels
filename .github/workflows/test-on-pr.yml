@@ -1,0 +1,30 @@
+# This workflow will run unit tests every time you open a Pull Request.
+
+name: Test on PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PEXEL_API_KEY: ${{ secrets.PEXEL_API_KEY }}
+
+    # If we are a draft PR, don't run.
+    if: ${{ !github.event.pull_request.draft }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create Local Properties File with API Key
+        run: echo PEXEL_API_KEY=\"PEXEL_API_KEY\" > ./local.properties
+
+      - name: Run Unit Tests
+        run: ./gradlew test
