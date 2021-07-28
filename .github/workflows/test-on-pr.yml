@@ -1,0 +1,24 @@
+# This workflow will run unit tests every time you open a Pull Request.
+
+name: Test on PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    # If we are a draft PR, don't run.
+    if: ${{ !github.event.pull_request.draft }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run Unit Tests
+        run: ./gradlew test

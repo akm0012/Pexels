@@ -1,3 +1,5 @@
 <resources>
+    <string name="pexel_base_endpoint" translatable="false">https://api.pexels.com/v1/</string>
+
     <string name="app_name">Pexels</string>
 </resources>
