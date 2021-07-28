@@ -18,7 +18,7 @@ class PexelApiService @Inject constructor(retrofit: Retrofit) {
      * @param page What page of results do you want.
      * @return A list of photos along with some metadata. See [ImageSearchResponse]
      */
-    suspend fun getNotCompletedRequestedItems(
+    suspend fun searchForImages(
         searchQuery: String,
         limitPerPage: Int = DEFAULT_PAGE_LIMIT,
         page: Int = DEFAULT_PAGE_START,
