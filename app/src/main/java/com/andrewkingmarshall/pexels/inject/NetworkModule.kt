@@ -3,6 +3,8 @@ package com.andrewkingmarshall.pexels.inject
 import android.content.Context
 import com.andrewkingmarshall.pexels.BuildConfig
 import com.andrewkingmarshall.pexels.R
+import com.andrewkingmarshall.pexels.network.interceptors.AuthenticationInterceptor
+import com.andrewkingmarshall.pexels.network.interceptors.ErrorInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,8 +35,8 @@ class NetworkModule {
         // Set up the HTTP Client
         return OkHttpClient.Builder()
             .addInterceptor(httpLoggingInterceptor)
-//            .addInterceptor(ErrorInterceptor(context))
-//            .addInterceptor(SecretHeaderInterceptor())
+            .addInterceptor(ErrorInterceptor(context))
+            .addInterceptor(AuthenticationInterceptor())
             .build()
     }
 
