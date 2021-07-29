@@ -11,6 +11,11 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <Button
             android:id="@+id/button"
             android:layout_width="wrap_content"
@@ -27,7 +32,7 @@
             android:id="@+id/writeSearchQuery2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Write Search 'Cats'" />
+            android:text="Write Search 'Other Dogs'" />
 
         <Button
             android:id="@+id/getResults"
@@ -39,7 +44,13 @@
             android:id="@+id/getResults2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Get Cats" />
+            android:text="Get Other Dogs" />
+
+        <Button
+            android:id="@+id/nuke"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nuke" />
 
     </LinearLayout>
 

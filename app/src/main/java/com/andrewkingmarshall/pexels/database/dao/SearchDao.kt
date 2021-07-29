@@ -4,6 +4,7 @@ import androidx.room.*
 import com.andrewkingmarshall.pexels.database.entities.ImageSearchCrossRef
 import com.andrewkingmarshall.pexels.database.entities.SearchQuery
 import com.andrewkingmarshall.pexels.database.entities.SearchQueryWithImages
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SearchDao {
@@ -16,5 +17,5 @@ interface SearchDao {
 
     @Transaction
     @Query("SELECT * FROM SearchQuery WHERE searchQuery = :searchQuery")
-    suspend fun getSearchQueryWithImages(searchQuery: String): List<SearchQueryWithImages>
+    fun getSearchQueryWithImages(searchQuery: String): Flow<List<SearchQueryWithImages>?>
 }

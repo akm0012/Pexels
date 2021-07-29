@@ -12,5 +12,5 @@ data class SearchQueryWithImages(
         entityColumn = IMAGE_PRIMARY_KEY,
         associateBy = Junction(ImageSearchCrossRef::class)
     )
-    val images: List<Image>
+    val images: List<Image>?
 )

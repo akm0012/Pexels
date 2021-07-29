@@ -2,7 +2,10 @@ package com.andrewkingmarshall.pexels.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.andrewkingmarshall.pexels.database.AppDatabase
 import com.andrewkingmarshall.pexels.database.dao.ImageDao
 import com.andrewkingmarshall.pexels.database.dao.SearchDao
 import com.andrewkingmarshall.pexels.database.entities.Image
@@ -11,7 +14,10 @@ import com.andrewkingmarshall.pexels.database.entities.SearchQuery
 import com.andrewkingmarshall.pexels.databinding.ActivityMainBinding
 import com.andrewkingmarshall.pexels.network.interceptors.NetworkException
 import com.andrewkingmarshall.pexels.network.service.PexelApiService
+import com.andrewkingmarshall.pexels.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -25,10 +31,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var apiService: PexelApiService
 
     @Inject
+    lateinit var appDatabase: AppDatabase
+
+    @Inject
     lateinit var imageDao: ImageDao
 
     @Inject
     lateinit var searchDao: SearchDao
+
+    lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +47,34 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        testDatabaseCode()
+
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                Timber.tag("akm").d("onQueryTextSubmit: $query")
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                Timber.tag("akm").d("onQueryTextChange: $newText")
+                newText?.let {viewModel.onSearchQueryChanged(it) }
+                return true
+            }
+
+        })
+
+        viewModel.searchResults.observe(this, { searchResults: List<Image> ->
+            if (searchResults.isEmpty()) {
+                Timber.tag("akm").d("0 results")
+            } else {
+                Timber.tag("akm").d("${searchResults.size} results")
+            }
+        })
+    }
+
+    private fun testDatabaseCode() {
         binding.button.setOnClickListener {
 
             lifecycleScope.launch {
@@ -43,10 +82,10 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val response = apiService.searchForImages("Harry Potter")
 
-                    Timber.d("${response.photos.size}")
+                    Timber.tag("akm").d("${response.photos.size}")
 
                 } catch (e: NetworkException) {
-                    Timber.d("${e.localizedMessage}")
+                    Timber.tag("akm").d("${e.localizedMessage}")
 
                 }
             }
@@ -107,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                 searchDao.insertImageSearchCrossRef(dogCrossRef)
                 searchDao.insertImageSearchCrossRef(dogCrossRef2)
 
-                Timber.i("Done writing dogs to db")
+                Timber.tag("akm").i("Done writing dogs to db")
             }
 
         }
@@ -167,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                 searchDao.insertImageSearchCrossRef(dogCrossRef)
                 searchDao.insertImageSearchCrossRef(dogCrossRef2)
 
-                Timber.i("Done writing dogs to db")
+                Timber.tag("akm").i("Done writing other dogs to db")
             }
 
         }
@@ -177,7 +216,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val dogsSearchQueryWithImages = searchDao.getSearchQueryWithImages("dog")
 
-                Timber.d("Bam! $dogsSearchQueryWithImages")
+                Timber.tag("akm").d("Bam! $dogsSearchQueryWithImages")
             }
         }
 
@@ -187,9 +226,14 @@ class MainActivity : AppCompatActivity() {
 
                 val dogsSearchQueryWithImages = searchDao.getSearchQueryWithImages("other dog")
 
-                Timber.d("Bam! $dogsSearchQueryWithImages")
+                Timber.tag("akm").d("Bam! $dogsSearchQueryWithImages")
             }
         }
 
+        binding.nuke.setOnClickListener {
+            CoroutineScope(Dispatchers.IO).launch {
+                appDatabase.clearAllTables()
+            }
+        }
     }
 }
