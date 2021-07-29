@@ -3,6 +3,8 @@ package com.andrewkingmarshall.pexels.database.entities
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.andrewkingmarshall.pexels.network.dtos.PexelImageDto
+import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
 
 /**
  * Represents a Pexel Photo.
@@ -18,7 +20,6 @@ import androidx.room.PrimaryKey
  * @property smallUrl The image scaled proportionally so that it's new height is 130px.
  * @property tinyUrl The image cropped to W 280px X H 200px.
  * @property dateAdded The date this image was added. Represented in seconds that have elapsed since the Unix epoch.
- * @property lastDateAccessed The date this image was last accessed. Represented in seconds that have elapsed since the Unix epoch.
  */
 @Entity
 data class Image(
@@ -33,7 +34,20 @@ data class Image(
     val smallUrl: String,
     val tinyUrl: String,
     val dateAdded: Long,
-    val lastDateAccessed: Long,
-)
+) {
+    constructor(imageDto: PexelImageDto) : this(
+        imageId = imageDto.id,
+        width = imageDto.width,
+        height = imageDto.height,
+        avg_color = imageDto.avg_color,
+        fullSizeUrl = imageDto.src.original,
+        large2xUrl = imageDto.src.large2x,
+        largeUrl = imageDto.src.large,
+        mediumUrl = imageDto.src.medium,
+        smallUrl = imageDto.src.small,
+        tinyUrl = imageDto.src.tiny,
+        dateAdded = getCurrentTimeInSec(),
+    )
+}
 
 const val IMAGE_PRIMARY_KEY = "imageId"

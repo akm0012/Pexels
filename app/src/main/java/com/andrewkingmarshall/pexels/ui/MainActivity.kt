@@ -47,8 +47,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        testDatabaseCode()
-
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -65,11 +63,14 @@ class MainActivity : AppCompatActivity() {
 
         })
 
-        viewModel.searchResults.observe(this, { searchResults: List<Image> ->
+        viewModel.searchResults.observe(this, { searchResults ->
             if (searchResults.isEmpty()) {
                 Timber.tag("akm").d("0 results")
             } else {
                 Timber.tag("akm").d("${searchResults.size} results")
+                searchResults.forEach {
+                    Timber.tag("akm").d("DisplayData: ${it.urlFullScreen}")
+                }
             }
         })
     }
@@ -106,7 +107,6 @@ class MainActivity : AppCompatActivity() {
                 "url5",
                 "url6",
                 System.currentTimeMillis() / 1000,
-                System.currentTimeMillis() / 1000,
             )
 
             val dogImage2 = Image(
@@ -120,7 +120,6 @@ class MainActivity : AppCompatActivity() {
                 "url4",
                 "url5",
                 "url6",
-                System.currentTimeMillis() / 1000,
                 System.currentTimeMillis() / 1000,
             )
 
@@ -166,7 +165,6 @@ class MainActivity : AppCompatActivity() {
                 "url5",
                 "url6",
                 System.currentTimeMillis() / 1000,
-                System.currentTimeMillis() / 1000,
             )
 
             val dogImage2 = Image(
@@ -180,7 +178,6 @@ class MainActivity : AppCompatActivity() {
                 "url4",
                 "url5",
                 "url6",
-                System.currentTimeMillis() / 1000,
                 System.currentTimeMillis() / 1000,
             )
 

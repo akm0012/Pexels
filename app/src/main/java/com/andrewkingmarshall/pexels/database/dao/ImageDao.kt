@@ -12,4 +12,7 @@ interface ImageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImage(image: Image)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertImages(images: List<Image>)
+
 }
