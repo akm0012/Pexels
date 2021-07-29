@@ -6,13 +6,42 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Api Call" />
+
+        <Button
+            android:id="@+id/writeSearchQuery1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Write Search 'Dogs'" />
+
+        <Button
+            android:id="@+id/writeSearchQuery2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Write Search 'Cats'" />
+
+        <Button
+            android:id="@+id/getResults"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get Dogs" />
+
+        <Button
+            android:id="@+id/getResults2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get Cats" />
+
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
