@@ -46,6 +46,8 @@ class SearchRepository @Inject constructor(
             val searchToSave = SearchQuery(searchQuery, getCurrentTimeInSec())
 
             // Todo: delete Images, Glide Data, and Searched from Database once per week
+            // Todo: Try to re-call this function if it fails because it is offline
+            // Pinch to Zoom
 
             // Convert the Dtos into Database objects
             imageSearchResponse.photos.forEach { dto ->

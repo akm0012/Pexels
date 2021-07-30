@@ -18,5 +18,9 @@
         android:id="@+id/imageDetailFragment"
         android:name="com.andrewkingmarshall.pexels.ui.fragments.ImageDetailFragment"
         android:label="fragment_image_detail"
-        tools:layout="@layout/fragment_image_detail" />
+        tools:layout="@layout/fragment_image_detail" >
+        <argument
+            android:name="mediaItem"
+            app:argType="com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem" />
+    </fragment>
 </navigation>

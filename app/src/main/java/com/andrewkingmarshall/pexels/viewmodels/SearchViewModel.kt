@@ -1,7 +1,10 @@
 package com.andrewkingmarshall.pexels.viewmodels
 
 import android.content.Context
+import android.view.View
+import android.widget.ImageView
 import androidx.lifecycle.*
+import androidx.recyclerview.widget.RecyclerView
 import com.andrewkingmarshall.pexels.R
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
@@ -27,6 +30,8 @@ class SearchViewModel @Inject constructor(
     private val currentSearchQuery = MutableLiveData<String>()
 
     var screenWidth = 0
+
+    var lastPositionClicked = 0
 
     val searchResults: LiveData<List<MediaItem>> =
         Transformations.switchMap(currentSearchQuery) { searchQuery ->

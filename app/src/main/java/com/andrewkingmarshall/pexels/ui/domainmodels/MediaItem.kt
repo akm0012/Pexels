@@ -1,5 +1,7 @@
 package com.andrewkingmarshall.pexels.ui.domainmodels
 
+import java.io.Serializable
+
 /**
  * A Domain Model that represents a single media item.
  *
@@ -13,4 +15,4 @@ data class MediaItem(
     val urlFullScreen: String,
     val averageColor: String?,
     val desiredDimen: Int = 0,
-)
+): Serializable
