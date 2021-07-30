@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mediaGridFragment">
+
+    <fragment
+        android:id="@+id/mediaGridFragment"
+        android:name="com.andrewkingmarshall.pexels.ui.fragments.MediaGridFragment"
+        android:label="fragment_media_grid"
+        tools:layout="@layout/fragment_media_grid" >
+        <action
+            android:id="@+id/action_mediaGridFragment_to_imageDetailFragment"
+            app:destination="@id/imageDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/imageDetailFragment"
+        android:name="com.andrewkingmarshall.pexels.ui.fragments.ImageDetailFragment"
+        android:label="fragment_image_detail"
+        tools:layout="@layout/fragment_image_detail" />
+</navigation>

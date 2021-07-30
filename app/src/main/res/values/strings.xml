@@ -7,4 +7,7 @@
     <string name="no_network_detected">Sorry, you appear to be offline.</string>
     <string name="timeout">Sorry, the network request timed out. Please try again later.</string>
 
+    <string name="search_for_images">Search for Images…</string>
+    <string name="an_image">An Image</string>
+
 </resources>

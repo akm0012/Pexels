@@ -30,6 +30,8 @@ class SearchRepository @Inject constructor(
 
         Timber.v("Executing search for $searchQuery")
 
+        // todo: create Paging cache so we don't make duplicate calls
+
         try {
             // todo: deal with paging
             val imageSearchResponse = pexelApiService.searchForImages(searchQuery)

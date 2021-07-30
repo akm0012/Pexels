@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Number of columns of media we see per row -->
+    <integer name="grid_columns">3</integer>
+
+</resources>

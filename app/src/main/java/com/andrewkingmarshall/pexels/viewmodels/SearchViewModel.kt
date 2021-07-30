@@ -1,21 +1,16 @@
 package com.andrewkingmarshall.pexels.viewmodels
 
 import androidx.lifecycle.*
-import com.andrewkingmarshall.pexels.database.entities.Image
-import com.andrewkingmarshall.pexels.database.entities.SearchQueryWithImages
 import com.andrewkingmarshall.pexels.repository.SearchRepository
-import com.andrewkingmarshall.pexels.ui.domainmodels.DisplayData
+import com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem
 import com.andrewkingmarshall.pexels.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.flatMap
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
 ) : ViewModel() {
 
@@ -23,7 +18,7 @@ class MainViewModel @Inject constructor(
 
     private val currentSearchQuery = MutableLiveData<String>()
 
-    val searchResults: LiveData<List<DisplayData>> =
+    val searchResults: LiveData<List<MediaItem>> =
         Transformations.switchMap(currentSearchQuery) { searchQuery ->
             searchRepository.getSearchQueryWithImagesFlow(searchQuery)
                 .map {
@@ -33,10 +28,10 @@ class MainViewModel @Inject constructor(
                         it.first().images
                     }
                 }.map { imageList ->
-                    val displayData = ArrayList<DisplayData>()
+                    val displayData = ArrayList<MediaItem>()
                     imageList.forEach {
                         //todo: pick the best URL for the current screen size
-                      displayData.add(DisplayData(it.smallUrl, it.largeUrl))
+                      displayData.add(MediaItem(it.smallUrl, it.largeUrl, it.avgColor))
                     }
                     displayData
                 }
