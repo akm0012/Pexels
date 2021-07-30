@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.fragments.ImageDetailFragment">
 
-    <ImageView
+    <com.andrewkingmarshall.pexels.ui.PinchToZoomImageView
         android:id="@+id/fullScreenImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
