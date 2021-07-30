@@ -57,7 +57,7 @@ class MediaGridFragment : BaseFragment<FragmentMediaGridBinding>(FragmentMediaGr
 
         mediaAdapter.onBindListener = object : MediaAdapter.OnBindListener {
             override fun onPositionBound(position: Int) {
-                Timber.d("Position bound: $position")
+                viewModel.onItemBound(position)
             }
         }
 

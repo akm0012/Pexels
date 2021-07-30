@@ -20,14 +20,15 @@ class PexelApiService @Inject constructor(retrofit: Retrofit) {
      */
     suspend fun searchForImages(
         searchQuery: String,
-        limitPerPage: Int = DEFAULT_PAGE_LIMIT,
-        page: Int = DEFAULT_PAGE_START,
+        limitPerPage: Int = PAGE_LIMIT,
+        page: Int = PAGE_START,
     ): ImageSearchResponse {
         return apiServiceInterface.searchForPhotos(searchQuery, limitPerPage, page)
     }
 
     companion object {
-        const val DEFAULT_PAGE_LIMIT = 30;
-        const val DEFAULT_PAGE_START = 0;
+        const val PAGE_LIMIT = 30;
+        const val PAGE_START = 1;
+        const val PAGING_THRESHOLD = 3;
     }
 }

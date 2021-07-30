@@ -22,6 +22,6 @@ interface SearchDao {
     suspend fun insertImageSearchCrossRefs(searchCrossRefs: List<ImageSearchCrossRef>)
 
     @Transaction
-    @Query("SELECT * FROM SearchQuery WHERE searchQuery = :searchQuery")
+    @Query("SELECT * FROM SearchQuery WHERE searchQuery = :searchQuery ORDER BY dateSearched ASC")
     fun getSearchQueryWithImages(searchQuery: String): Flow<List<SearchQueryWithImages>?>
 }

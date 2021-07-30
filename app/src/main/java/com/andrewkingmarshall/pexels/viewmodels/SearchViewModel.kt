@@ -3,6 +3,9 @@ package com.andrewkingmarshall.pexels.viewmodels
 import android.content.Context
 import androidx.lifecycle.*
 import com.andrewkingmarshall.pexels.R
+import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
+import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
+import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGING_THRESHOLD
 import com.andrewkingmarshall.pexels.repository.SearchRepository
 import com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem
 import com.andrewkingmarshall.pexels.util.SingleLiveEvent
@@ -10,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -52,6 +56,43 @@ class SearchViewModel @Inject constructor(
                 .asLiveData()
         }
 
+    fun onSearchQueryChanged(newSearchQuery: String) {
+        currentSearchQuery.value = newSearchQuery
+        executeSearch(newSearchQuery)
+    }
+
+    /**
+     * Called whenever an item is "bound" (or loaded) in the Recycler View. This is where we will
+     * determine if we should load the next page.
+     *
+     * @param position The position that is being bound.
+     */
+    fun onItemBound(position: Int) {
+        Timber.v("onItemBound: $position")
+
+        if ((position + PAGING_THRESHOLD) % PAGE_LIMIT == 0) {
+            val nextPage = ((position + PAGING_THRESHOLD) / PAGE_LIMIT) + PAGE_START
+
+            Timber.d("Paging threshold reached. Get the next page: $nextPage")
+
+            currentSearchQuery.value?.let {
+                executeSearch(it, nextPage)
+            }
+        }
+    }
+
+    private fun executeSearch(newSearchQuery: String, page: Int = PAGE_START) {
+        viewModelScope.launch {
+            try {
+                if (newSearchQuery.isNotBlank()) {
+                    searchRepository.executeSearch(newSearchQuery, page)
+                }
+            } catch (e: Exception) {
+                showError.value = e.localizedMessage
+            }
+        }
+    }
+
     fun onWidthOfScreenDetermined(screenWidth: Int) {
         this.screenWidth = screenWidth
     }
@@ -60,17 +101,5 @@ class SearchViewModel @Inject constructor(
         return screenWidth / context.resources.getInteger(R.integer.grid_columns)
     }
 
-    fun onSearchQueryChanged(newSearchQuery: String) {
-        currentSearchQuery.value = newSearchQuery
-        viewModelScope.launch {
-            try {
-                if (newSearchQuery.isNotBlank()) {
-                    searchRepository.executeSearch(newSearchQuery)
-                }
-            } catch (e: Exception) {
-                showError.value = e.localizedMessage
-            }
-        }
-    }
 
 }
