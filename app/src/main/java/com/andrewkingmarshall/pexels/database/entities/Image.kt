@@ -12,7 +12,7 @@ import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
  * @property imageId The id of the photo.
  * @property width The real width of the photo in pixels.
  * @property height The real height of the photo in pixels.
- * @property avg_color The real height of the photo in pixels.
+ * @property avgColor The average color of the photo. Useful for a placeholder while the image loads.
  * @property fullSizeUrl The image without any size changes. It will be the same as the [width][Image.width] and [height][Image.height] attributes.
  * @property large2xUrl The image resized W 940px X H 650px DPR 2.
  * @property largeUrl The image resized to W 940px X H 650px DPR 1.

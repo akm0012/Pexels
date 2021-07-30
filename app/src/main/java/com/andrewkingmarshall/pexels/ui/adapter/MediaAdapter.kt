@@ -15,7 +15,7 @@ import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 
-class MediaAdapter() :
+class MediaAdapter :
     ListAdapter<MediaItem, MediaAdapter.ViewHolder>(MediaItemDiffCallback()) {
 
     /**
@@ -36,7 +36,6 @@ class MediaAdapter() :
 
     var onBindListener: OnBindListener? = null
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             MediaItemBinding.inflate(
@@ -49,7 +48,7 @@ class MediaAdapter() :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         onBindListener?.onPositionBound(position)
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), onMediaClickedListener)
     }
 
     class ViewHolder(
@@ -58,23 +57,30 @@ class MediaAdapter() :
 
         fun bind(mediaItem: MediaItem, mediaClickedListener: OnMediaClickedListener? = null) {
 
+            // Set the ImageView to the exact size we want. As determined from the screen's current width
+            binding.imageView.layoutParams.height = mediaItem.desiredDimen
+            binding.imageView.layoutParams.width = mediaItem.desiredDimen
+            binding.imageView.requestLayout()
+
             // Set the background to the average color while the image loads
             mediaItem.averageColor?.let { colorAsHex ->
                 binding.imageView.setBackgroundColor(Color.parseColor(colorAsHex))
             }
 
-//            // Load the Image
-//            Glide.with(itemView)
-//                .load(mediaItem.urlPreview)
-//                .diskCacheStrategy(DiskCacheStrategy.RESOURCE) // Cache the decoded version of the image
-//                .into(binding.imageView)
+            // Load the Image
+            Glide.with(itemView)
+                .load(mediaItem.urlPreview)
+                .override(mediaItem.desiredDimen)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE) // Cache the decoded version of the image
+                .into(binding.imageView)
 
+            // Listen for clicks
             mediaClickedListener?.let { listener ->
                 binding.imageView.setOnClickListener { listener.onMediaClicked(mediaItem) }
             }
         }
     }
-
 }
 
 private class MediaItemDiffCallback : DiffUtil.ItemCallback<MediaItem>() {
