@@ -1,5 +1,6 @@
 package com.andrewkingmarshall.pexels.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Matrix
 import android.graphics.RectF
@@ -19,7 +20,9 @@ const val MAX_SCALE = 5.0f
 const val MIN_SCALE = 1.0f
 
 /**
- * TODO
+ * This custom ImageView will allow the user to pinch to zoom and pan around an Image.
+ *
+ * It still could use some polish especially when panning an image off screen.
  *
  * Credit: I took a lot of inspiration from these sources and used them to better understand the
  *         concepts. Some helper functions were copied from other sources, but the 'meat' of this
@@ -33,53 +36,33 @@ class PinchToZoomImageView : AppCompatImageView {
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
+    private var scaleFactor = 1f
 
-    private var mScaleFactor = 1f
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
+    private var activePointerId = INVALID_POINTER_ID
 
-    private var mLastTouchX = 0f
-    private var mLastTouchY = 0f
-    private var mActivePointerId = INVALID_POINTER_ID
-
-    private var mPosX = 0f
-    private var mPosY = 0f
-
-    //todo for tomorrow:
-    /*
-       So it looks like you need:
-       1. BaseMatrix that is basically the setToFitFitCenterMatrix() matrix
-       2. When you scale / move you are editing another "support Matrix"
-       3. When you go to actually update the ImageView you are using a 3rd "drawMatrix" which is a combo of base and support
-
-       private Matrix getDrawMatrix() {
-        mDrawMatrix.set(mBaseMatrix);
-        mDrawMatrix.postConcat(mSuppMatrix);
-        return mDrawMatrix;
-    }
-
-
-        Could use this if I don't want to do the hacky first scale trick, but then I lose the animation I think
-
-        @Override
-    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-        // Update our base matrix, as the bounds have changed
-        if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
-            resetBaseMatrix(mImageView.getDrawable());
-        }
-    }
-
-
-     */
-
-
-    //    private var centerFitMatrix = Matrix()
+    // The matrix that all transforms are applied to.
     private val baseMatrix = Matrix()
+
+    //  The matrix used to transform the base matrix
     private var transMatrix = Matrix()
+
+    // A helper matrix that is used when applying the matrix changes to the drawable
     private val drawMatrix = Matrix()
 
-    private val mMatrixValues = FloatArray(9)
+    private val matrixValues = FloatArray(9)
 
-    // This works!
-    fun resetBaseMatrix() {
+    init {
+        // Start with FIT_CENTER so our animations look nice, then change to MATRIX mode once
+        // you start pinching to Zoom
+        scaleType = ScaleType.FIT_CENTER
+    }
+
+    /**
+     * Resets the Image to FIT_CENTER in Matrix mode. Will also reset the scaling and panning.
+     */
+    private fun resetBaseMatrix() {
         scaleType = ScaleType.MATRIX
 
         val imageWidth = drawable.intrinsicWidth.toFloat()
@@ -91,18 +74,19 @@ class PinchToZoomImageView : AppCompatImageView {
         baseMatrix.reset()
         transMatrix.reset()
 
-        mScaleFactor = 1.0f
+        scaleFactor = 1.0f
 
-        mLastTouchX = 0f
-        mLastTouchY = 0f
-        mPosX = 0f
-        mPosY = 0f
+        lastTouchX = 0f
+        lastTouchY = 0f
 
         baseMatrix.setRectToRect(drawableRect, viewRect, Matrix.ScaleToFit.CENTER)
 
         applyMatrix()
     }
 
+    /**
+     * Applies the transform matrix's to the base matrix and sets those changes to the ImageMatrix.
+     */
     private fun applyMatrix() {
         if (drawable == null) {
             return
@@ -114,21 +98,10 @@ class PinchToZoomImageView : AppCompatImageView {
         imageMatrix = drawMatrix
     }
 
-//    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-//        super.onLayout(changed, left, top, right, bottom)
-//        if (drawable == null) {
-//            return
-//        }
-//        Timber.tag("akm").d("onLayout")
-//        setToFitFitCenterMatrix()
-//    }
-
-    init {
-        // Start with FIT_CENTER so our animations look nice, then change to MATRIX mode once
-        // you start pinching to Zoom
-        scaleType = ScaleType.FIT_CENTER
-    }
-
+    /**
+     * Listens for Scale events. When a scale event is detected, it will alter the transform matrix
+     * then apply those changes to the base matrix. Resulting in the drawable being scaled.
+     */
     private val scaleListener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -139,19 +112,18 @@ class PinchToZoomImageView : AppCompatImageView {
             }
 
             // Keep track of our scale factor, while also making sure we never go beyond our bounds
-            mScaleFactor *= detector.scaleFactor
-            mScaleFactor = max(MIN_SCALE, min(mScaleFactor, MAX_SCALE))
+            scaleFactor *= detector.scaleFactor
+            scaleFactor = max(MIN_SCALE, min(scaleFactor, MAX_SCALE))
 
             // The amount we want to change our scaling, this will be concatenated to our transMatrix
-            val deltaScale = mScaleFactor / getScale()
+            val deltaScale = scaleFactor / getScale()
 
             /* Check to make sure we are not trying to scale past a threshold, if we are at a threshold
                but we are about to make it smaller/larger so it will continue to be in the threshold
                then we allow it. */
             if ((getScale() < MAX_SCALE || deltaScale < 1f) && (getScale() > MIN_SCALE || deltaScale > 1f)) {
 
-                Timber.d("Scale Factor = $mScaleFactor")
-                Timber.d("deltaScale = $deltaScale")
+                Timber.d("Scale Factor = $scaleFactor")
 
                 transMatrix.postScale(deltaScale, deltaScale, width / 2f, height / 2f)
 
@@ -165,10 +137,81 @@ class PinchToZoomImageView : AppCompatImageView {
         }
     }
 
+    private val scaleDetector = ScaleGestureDetector(context, scaleListener)
+
     /**
-     * TODO
+     * Listens for all touch events on this View.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        // Let the ScaleGestureDetector know about all touch events
+        scaleDetector.onTouchEvent(ev)
+
+        val action = ev.action
+        when (action and MotionEvent.ACTION_MASK) {
+            MotionEvent.ACTION_DOWN -> {
+                val x = ev.x
+                val y = ev.y
+                lastTouchX = x
+                lastTouchY = y
+                activePointerId = ev.getPointerId(0)
+                Timber.tag("touch").d("ACTION_DOWN:  x = $x   y = $y")
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val pointerIndex = ev.findPointerIndex(activePointerId)
+                val x = ev.getX(pointerIndex)
+                val y = ev.getY(pointerIndex)
+
+                /* FIXME: Check if moving the image would take it out of bounds
+                    Turns out this is actually very difficult. Would need to take into account scaling as well.
+                */
+
+                // Only move if the ScaleGestureDetector isn't processing a gesture.
+                if (!scaleDetector.isInProgress) {
+
+                    val dx = x - lastTouchX
+                    val dy = y - lastTouchY
+
+                    transMatrix.postTranslate(dx, dy)
+                    applyMatrix()
+                }
+                lastTouchX = x
+                lastTouchY = y
+                Timber.tag("touch").d("ACTION_MOVE:  x = $x   y = $y")
+            }
+            MotionEvent.ACTION_UP -> {
+                activePointerId = INVALID_POINTER_ID
+                Timber.tag("touch").d("ACTION_UP:  x = ${ev.x}   y = ${ev.y}")
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                activePointerId = INVALID_POINTER_ID
+                Timber.tag("touch").d("ACTION_CANCEL:  x = ${ev.x}   y = ${ev.y}")
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                ev.actionIndex.also { pointerIndex ->
+                    ev.getPointerId(pointerIndex)
+                        .takeIf { it == activePointerId }
+                        ?.run {
+                            // This was our active pointer going up. Choose a new
+                            // active pointer and adjust accordingly.
+                            val newPointerIndex = if (pointerIndex == 0) 1 else 0
+                            lastTouchX = ev.getX(newPointerIndex)
+                            lastTouchY = ev.getY(newPointerIndex)
+                            activePointerId = ev.getPointerId(newPointerIndex)
+                        }
+                }
+                Timber.tag("touch").d("ACTION_POINTER_UP:  x = ${ev.x}   y = ${ev.y}")
+            }
+
+        }
+
+        return true
+    }
+
+    /**
+     * Calculates the Scale from the transMatrix.
      *
-     * @return
+     * @return The current scale applied to the transMatrix.
      */
     fun getScale(): Float {
         return sqrt(
@@ -187,73 +230,8 @@ class PinchToZoomImageView : AppCompatImageView {
      * @return returned value
      */
     private fun getValue(matrix: Matrix, whichValue: Int): Float {
-        matrix.getValues(mMatrixValues)
-        return mMatrixValues[whichValue]
-    }
-
-    private val mScaleDetector = ScaleGestureDetector(context, scaleListener)
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        // Let the ScaleGestureDetector inspect all events.
-        mScaleDetector.onTouchEvent(ev)
-
-        val action = ev.action
-        when (action and MotionEvent.ACTION_MASK) {
-            MotionEvent.ACTION_DOWN -> {
-                val x = ev.x
-                val y = ev.y
-                mLastTouchX = x
-                mLastTouchY = y
-                mActivePointerId = ev.getPointerId(0)
-                Timber.tag("touch").d("ACTION_DOWN:  x = $x   y = $y")
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val pointerIndex = ev.findPointerIndex(mActivePointerId)
-                val x = ev.getX(pointerIndex)
-                val y = ev.getY(pointerIndex)
-
-                // todo: Check if moving the image would take it off the screen, if so, don't do it
-                // Only move if the ScaleGestureDetector isn't processing a gesture.
-                if (!mScaleDetector.isInProgress) {
-                    val dx = x - mLastTouchX
-                    val dy = y - mLastTouchY
-                    mPosX += dx
-                    mPosY += dy
-
-                    transMatrix.postTranslate(dx, dy)
-                    applyMatrix()
-                }
-                mLastTouchX = x
-                mLastTouchY = y
-                Timber.tag("touch").d("ACTION_MOVE:  x = $x   y = $y")
-            }
-            MotionEvent.ACTION_UP -> {
-                mActivePointerId = INVALID_POINTER_ID
-                Timber.tag("touch").d("ACTION_UP:  x = ${ev.x}   y = ${ev.y}")
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                mActivePointerId = INVALID_POINTER_ID
-                Timber.tag("touch").d("ACTION_CANCEL:  x = ${ev.x}   y = ${ev.y}")
-            }
-            MotionEvent.ACTION_POINTER_UP -> {
-                ev.actionIndex.also { pointerIndex ->
-                    ev.getPointerId(pointerIndex)
-                        .takeIf { it == mActivePointerId }
-                        ?.run {
-                            // This was our active pointer going up. Choose a new
-                            // active pointer and adjust accordingly.
-                            val newPointerIndex = if (pointerIndex == 0) 1 else 0
-                            mLastTouchX = ev.getX(newPointerIndex)
-                            mLastTouchY = ev.getY(newPointerIndex)
-                            mActivePointerId = ev.getPointerId(newPointerIndex)
-                        }
-                }
-                Timber.tag("touch").d("ACTION_POINTER_UP:  x = ${ev.x}   y = ${ev.y}")
-            }
-
-        }
-
-        return true
+        matrix.getValues(matrixValues)
+        return matrixValues[whichValue]
     }
 
 }
