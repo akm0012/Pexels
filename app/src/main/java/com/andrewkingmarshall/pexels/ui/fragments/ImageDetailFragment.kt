@@ -51,7 +51,6 @@ class ImageDetailFragment :
             transitionName = imageUrl
             Glide.with(this)
                 .load(imageUrl)
-                .centerInside()
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
                         e: GlideException?,
