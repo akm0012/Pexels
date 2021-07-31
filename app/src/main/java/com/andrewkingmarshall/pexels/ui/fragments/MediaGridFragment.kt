@@ -18,6 +18,7 @@ import com.andrewkingmarshall.pexels.databinding.FragmentMediaGridBinding
 import com.andrewkingmarshall.pexels.extensions.toast
 import com.andrewkingmarshall.pexels.ui.adapter.MediaAdapter
 import com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem
+import com.andrewkingmarshall.pexels.util.hideKeyboard
 import com.andrewkingmarshall.pexels.viewmodels.SearchViewModel
 import timber.log.Timber
 
@@ -63,47 +64,54 @@ class MediaGridFragment :
     }
 
     private fun setUpSearchView() {
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                // Don't care, we will update the results in real time with onQueryTextChange
-                return true
-            }
+        binding.searchView.apply {
+            requestFocus()
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    // Don't care, we will update the results in real time with onQueryTextChange
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                newText?.let { viewModel.onSearchQueryChanged(it) }
-                return true
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    newText?.let { viewModel.onSearchQueryChanged(it) }
+                    return true
+                }
+            })
+        }
     }
 
     private fun setUpRecyclerView() {
 
-        binding.mediaRecyclerView.adapter = mediaAdapter
+        // Set up the Adapter and add all the Listeners
+        binding.mediaRecyclerView.adapter = mediaAdapter.apply {
 
-        mediaAdapter.onBindListener = object : MediaAdapter.OnBindListener {
-            override fun onPositionBound(position: Int) {
-                viewModel.onItemBound(position)
+            onBindListener = object : MediaAdapter.OnBindListener {
+                override fun onPositionBound(position: Int) {
+                    viewModel.onItemBound(position)
+                }
             }
-        }
 
-        mediaAdapter.onMediaClickedListener = object : MediaAdapter.OnMediaClickedListener {
-            override fun onMediaClicked(imageView: ImageView, mediaItem: MediaItem, position: Int) {
-                Timber.d("onMediaClicked: ${mediaItem.urlPreview}")
+            onMediaClickedListener = object : MediaAdapter.OnMediaClickedListener {
+                override fun onMediaClicked(imageView: ImageView, mediaItem: MediaItem, position: Int) {
+                    Timber.d("onMediaClicked: ${mediaItem.urlPreview}")
 
-                viewModel.lastPositionClicked = position
+                    activity?.let { hideKeyboard(it) }
 
-                val extras = FragmentNavigatorExtras(imageView to mediaItem.urlFullScreen)
-                val action =
-                    MediaGridFragmentDirections.actionMediaGridFragmentToImageDetailFragment(
-                        mediaItem
-                    )
-                navController.navigate(action, extras)
+                    viewModel.lastPositionClicked = position
+
+                    val extras = FragmentNavigatorExtras(imageView to mediaItem.urlFullScreen)
+                    val action =
+                        MediaGridFragmentDirections.actionMediaGridFragmentToImageDetailFragment(
+                            mediaItem
+                        )
+                    navController.navigate(action, extras)
+                }
             }
-        }
 
-        mediaAdapter.loadListener = object : MediaAdapter.OnLoadListener {
-            override fun onLoadCompleted() {
-                startPostponedEnterTransition()
+            loadListener = object : MediaAdapter.OnLoadListener {
+                override fun onLoadCompleted() {
+                    startPostponedEnterTransition()
+                }
             }
         }
 
