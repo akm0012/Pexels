@@ -45,6 +45,10 @@ class ImageDetailFragment :
             binding.background.setBackgroundColor(Color.parseColor(colorAsHex))
         }
 
+        binding.resetButton.setOnClickListener {
+            binding.fullScreenImageView.resetBaseMatrix()
+        }
+
         // Load the full size image
         val imageUrl = args.mediaItem.urlFullScreen
         binding.fullScreenImageView.apply {

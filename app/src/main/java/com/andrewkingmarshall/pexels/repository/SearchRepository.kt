@@ -45,6 +45,7 @@ class SearchRepository @Inject constructor(
             val imageSearchCrossRefsToSave = ArrayList<ImageSearchCrossRef>()
             val searchToSave = SearchQuery(searchQuery, getCurrentTimeInSec())
 
+            // Todo: Add server order (order + (page * limit))
             // Todo: delete Images, Glide Data, and Searched from Database once per week
             // Todo: Try to re-call this function if it fails because it is offline
             // Pinch to Zoom

@@ -9,6 +9,14 @@
     <com.andrewkingmarshall.pexels.ui.PinchToZoomImageView
         android:id="@+id/fullScreenImageView"
         android:layout_width="match_parent"
+        android:src="@color/black"
         android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/resetButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset"
+        />
 
 </FrameLayout>
