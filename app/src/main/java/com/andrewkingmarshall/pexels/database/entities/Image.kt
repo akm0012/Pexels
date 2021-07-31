@@ -34,8 +34,9 @@ data class Image(
     val smallUrl: String,
     val tinyUrl: String,
     val dateAdded: Long,
+    val serverOrder: Int,
 ) {
-    constructor(imageDto: PexelImageDto) : this(
+    constructor(imageDto: PexelImageDto, serverOrder: Int) : this(
         imageId = imageDto.id,
         width = imageDto.width,
         height = imageDto.height,
@@ -47,6 +48,7 @@ data class Image(
         smallUrl = imageDto.src.small,
         tinyUrl = imageDto.src.tiny,
         dateAdded = getCurrentTimeInSec(),
+        serverOrder = serverOrder
     )
 }
 

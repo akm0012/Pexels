@@ -42,6 +42,8 @@ class SearchViewModel @Inject constructor(
                     } else {
                         it.first().images
                     }
+                }.map {
+                    it.sortedBy { image -> image.serverOrder }
                 }.map { imageList ->
                     val displayData = ArrayList<MediaItem>()
                     imageList.forEach {

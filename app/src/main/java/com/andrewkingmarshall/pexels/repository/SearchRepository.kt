@@ -7,10 +7,12 @@ import com.andrewkingmarshall.pexels.database.entities.ImageSearchCrossRef
 import com.andrewkingmarshall.pexels.database.entities.SearchQuery
 import com.andrewkingmarshall.pexels.database.entities.SearchQueryWithImages
 import com.andrewkingmarshall.pexels.network.service.PexelApiService
+import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
 import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,11 +50,14 @@ class SearchRepository @Inject constructor(
             // Todo: Add server order (order + (page * limit))
             // Todo: delete Images, Glide Data, and Searched from Database once per week
             // Todo: Try to re-call this function if it fails because it is offline
-            // Pinch to Zoom
 
             // Convert the Dtos into Database objects
-            imageSearchResponse.photos.forEach { dto ->
-                val image = Image(dto)
+            imageSearchResponse.photos.forEachIndexed { index, dto ->
+
+                val serverOrder = ((page - 1) * PAGE_LIMIT) + index
+                Timber.d("Server order: $serverOrder")
+
+                val image = Image(dto, serverOrder)
 
                 imagesToSave.add(image)
 
