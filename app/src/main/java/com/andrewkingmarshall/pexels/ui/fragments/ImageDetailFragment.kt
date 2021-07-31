@@ -45,6 +45,7 @@ class ImageDetailFragment :
             binding.background.setBackgroundColor(Color.parseColor(colorAsHex))
         }
 
+        // Load the full size image
         val imageUrl = args.mediaItem.urlFullScreen
         binding.fullScreenImageView.apply {
             transitionName = imageUrl
