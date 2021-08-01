@@ -1,10 +1,8 @@
 package com.andrewkingmarshall.pexels.viewmodels
 
 import android.content.Context
-import android.view.View
-import android.widget.ImageView
 import androidx.lifecycle.*
-import androidx.recyclerview.widget.RecyclerView
+import androidx.work.*
 import com.andrewkingmarshall.pexels.R
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
@@ -13,11 +11,13 @@ import com.andrewkingmarshall.pexels.repository.PAGING_TAG
 import com.andrewkingmarshall.pexels.repository.SearchRepository
 import com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem
 import com.andrewkingmarshall.pexels.util.SingleLiveEvent
+import com.andrewkingmarshall.pexels.work.CleanUpDatabaseWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,6 +25,10 @@ class SearchViewModel @Inject constructor(
     @ApplicationContext val context: Context,
     private val searchRepository: SearchRepository,
 ) : ViewModel() {
+
+    init {
+        scheduleDatabaseCleanUp()
+    }
 
     val showError = SingleLiveEvent<String>()
 
@@ -111,5 +115,17 @@ class SearchViewModel @Inject constructor(
         return screenWidth / context.resources.getInteger(R.integer.grid_columns)
     }
 
+    /**
+     * Schedule a periodic worker that will delete old searches and images once a day.
+     */
+    private fun scheduleDatabaseCleanUp() {
+        Timber.d("Scheduling database clean up work.")
+
+        val cleanUpDbWorkRequest = PeriodicWorkRequestBuilder<CleanUpDatabaseWorker>(
+            1, TimeUnit.DAYS
+        ).build()
+
+        WorkManager.getInstance(context).enqueue(cleanUpDbWorkRequest)
+    }
 
 }

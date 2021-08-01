@@ -18,13 +18,13 @@ class ErrorInterceptor(private val context: Context) : Interceptor {
             chain.proceed(chain.request())
 
         } catch (notConnectedToNetworkException: UnknownHostException) {
-            val noNetworkDetectedException = NetworkException(context.getString(R.string.no_network_detected))
+            val noNetworkDetectedException = UnknownHostException(context.getString(R.string.no_network_detected))
             Timber.w(noNetworkDetectedException, "UnknownHostException. Check network connection")
             throw noNetworkDetectedException
 
         } catch (timeoutException: SocketTimeoutException) {
             val networkTimeoutException =
-                NetworkException(context.getString(R.string.timeout))
+                SocketTimeoutException(context.getString(R.string.timeout))
             Timber.w(networkTimeoutException, "NetworkTimeoutException. Network times out")
             throw networkTimeoutException
         }

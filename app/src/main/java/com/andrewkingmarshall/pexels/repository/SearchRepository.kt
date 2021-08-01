@@ -12,14 +12,23 @@ import com.andrewkingmarshall.pexels.network.service.PexelApiService
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
 import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
+import com.andrewkingmarshall.pexels.work.DB_CLEANUP_TAG
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import timber.log.Timber
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 const val PAGING_TAG = "paging"
+
+const val DELAY_UNTIL_SEARCH_RETRY_MILLIS = 10 * 1000L // 10 seconds
 
 @Singleton
 class SearchRepository @Inject constructor(
@@ -40,59 +49,103 @@ class SearchRepository @Inject constructor(
     suspend fun executeSearch(_searchQuery: String, page: Int = PAGE_START) {
         val searchQuery = _searchQuery.lowercase()
 
-        Timber.tag(PAGING_TAG).v("Checking cache to see if we've already searched for '$searchQuery' page $page.")
+        Timber.tag(PAGING_TAG)
+            .v("Checking cache to see if we've already searched for '$searchQuery' page $page.")
         if (searchHistoryCache.hasSearchBeenPerformed(searchQuery, page)) {
-            Timber.tag(PAGING_TAG).i("We have already searched for '$searchQuery' at page: $page. Aborting...")
+            Timber.tag(PAGING_TAG)
+                .i("We have already searched for '$searchQuery' at page: $page. Aborting...")
             return
         }
 
         Timber.tag(PAGING_TAG).v("Executing search for '$searchQuery' at page: $page")
 
-        try {
-            val imageSearchResponse = pexelApiService.searchForImages(searchQuery, page = page)
+        var shouldRetry = false
 
-            val imagesToSave = ArrayList<Image>()
-            val imageSearchCrossRefsToSave = ArrayList<ImageSearchCrossRef>()
-            val searchToSave = SearchQuery(searchQuery, getCurrentTimeInSec())
+        do {
 
-            // Todo: delete Images, Glide Data, and Searched from Database once per week
-            // Todo: Try to re-call this function if it fails because it is offline
-            // Remove akm tags
+            shouldRetry = false
 
-            // Convert the Dtos into Database objects
-            imageSearchResponse.photos.forEachIndexed { index, dto ->
+            try {
+                val imageSearchResponse = pexelApiService.searchForImages(searchQuery, page = page)
 
-                // Checks the list for duplicated photos (debug only)
-                checkForDuplicates(dto, page)
+                val imagesToSave = ArrayList<Image>()
+                val imageSearchCrossRefsToSave = ArrayList<ImageSearchCrossRef>()
+                val searchToSave = SearchQuery(searchQuery, getCurrentTimeInSec())
 
-                val serverOrder = ((page - 1) * PAGE_LIMIT) + index
-                Timber.d("Server order: $serverOrder")
+                // Todo: Remove akm tags
 
-                val image = Image(dto, page, serverOrder)
+                // Convert the Dtos into Database objects
+                imageSearchResponse.photos.forEachIndexed { index, dto ->
 
-                imagesToSave.add(image)
+                    // Checks the list for duplicated photos (debug only)
+                    checkForDuplicates(dto, page)
 
-                imageSearchCrossRefsToSave.add(
-                    ImageSearchCrossRef(
-                        image.imageId,
-                        searchToSave.searchQuery
+                    val serverOrder = ((page - 1) * PAGE_LIMIT) + index
+                    Timber.d("Server order: $serverOrder")
+
+                    val image = Image(dto, page, serverOrder)
+
+                    imagesToSave.add(image)
+
+                    imageSearchCrossRefsToSave.add(
+                        ImageSearchCrossRef(
+                            image.imageId,
+                            searchToSave.searchQuery
+                        )
                     )
-                )
+                }
+
+                // Save everything to the database
+                imageDao.insertImages(imagesToSave)
+                searchDao.insertSearchQuery(searchToSave)
+                searchDao.insertImageSearchCrossRefs(imageSearchCrossRefsToSave)
+
+                // Record this search so we don't make it again
+                searchHistoryCache.recordSuccessfulSearch(searchQuery, page)
+
+                Timber.tag(PAGING_TAG).v("Done executing search for $searchQuery at page $page.")
+
+            } catch (cause: Exception) {
+
+                when (cause) {
+                    is UnknownHostException, is SocketTimeoutException -> {
+                        Timber.w(cause, "Poor network connectivity, trying again soon...")
+                        shouldRetry = true
+                        delay(DELAY_UNTIL_SEARCH_RETRY_MILLIS)
+                        Timber.d("Trying the search for '$searchQuery' for page $page again...")
+                    }
+
+                    else -> {
+                        Timber.w(cause, "Unable to execute the search.")
+                        throw cause
+                    }
+                }
+            }
+        } while (shouldRetry)
+    }
+
+    /**
+     * Deletes all Searches and Images that were added before the expirationDate.
+     *
+     * @param expirationDateSec The date in which the Searches and Images expire in seconds.
+     */
+    suspend fun deleteOldSearches(expirationDateSec: Long) {
+        try {
+            val expiredSearches = searchDao.getSearchesCreatedBefore(expirationDateSec).first()
+            val expiredImages = imageDao.getImagesCreatedBefore(expirationDateSec).first()
+
+            Timber.tag(DB_CLEANUP_TAG).apply {
+                d("About to delete ${expiredSearches.count()} Searches.")
+                d("About to delete ${expiredImages.count()} Images.")
             }
 
-            // Save everything to the database
-            imageDao.insertImages(imagesToSave)
-            searchDao.insertSearchQuery(searchToSave)
-            searchDao.insertImageSearchCrossRefs(imageSearchCrossRefsToSave)
+            searchDao.deleteSearches(expiredSearches)
+            imageDao.deleteImages(expiredImages)
 
-            // Record this search so we don't make it again
-            searchHistoryCache.recordSuccessfulSearch(searchQuery, page)
-
-            Timber.tag(PAGING_TAG).v("Done executing search for $searchQuery at page $page.")
+            Timber.tag(DB_CLEANUP_TAG).d("Deletion complete.")
 
         } catch (cause: Exception) {
-            Timber.w(cause, "Unable to execute the search.")
-            throw cause
+            Timber.tag(DB_CLEANUP_TAG).w(cause, "Unable to delete old Searches and Images.")
         }
     }
 
