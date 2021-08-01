@@ -137,7 +137,7 @@ private class MediaItemDiffCallback : DiffUtil.ItemCallback<MediaItem>() {
         oldItem: MediaItem,
         newItem: MediaItem
     ): Boolean {
-        return oldItem.urlPreview == newItem.urlPreview
+        return oldItem.mediaId == newItem.mediaId
     }
 
     override fun areContentsTheSame(

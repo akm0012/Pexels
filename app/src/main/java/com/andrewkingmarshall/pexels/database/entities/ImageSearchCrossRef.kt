@@ -14,6 +14,6 @@ import androidx.room.Index
     indices = [Index(value = [SEARCH_QUERY_PRIMARY_KEY])]
 )
 data class ImageSearchCrossRef(
-    val imageId: Long,
+    val imageId: String,
     val searchQuery: String,
 )

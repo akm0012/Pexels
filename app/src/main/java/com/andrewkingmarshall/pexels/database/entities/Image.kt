@@ -9,7 +9,7 @@ import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
 /**
  * Represents a Pexel Photo.
  *
- * @property imageId The id of the photo.
+ * @property imageId The id of the photo. Created by using the original PexelId and the Page it was loaded from.
  * @property width The real width of the photo in pixels.
  * @property height The real height of the photo in pixels.
  * @property avgColor The average color of the photo. Useful for a placeholder while the image loads.
@@ -23,7 +23,7 @@ import com.andrewkingmarshall.pexels.util.getCurrentTimeInSec
  */
 @Entity
 data class Image(
-    @PrimaryKey val imageId: Long,
+    @PrimaryKey val imageId: String,
     val width: Int,
     val height: Int,
     val avgColor: String,
@@ -36,8 +36,8 @@ data class Image(
     val dateAdded: Long,
     val serverOrder: Int,
 ) {
-    constructor(imageDto: PexelImageDto, serverOrder: Int) : this(
-        imageId = imageDto.id,
+    constructor(imageDto: PexelImageDto, page: Int, serverOrder: Int) : this(
+        imageId = "${imageDto.id}_$page",
         width = imageDto.width,
         height = imageDto.height,
         avgColor = imageDto.avg_color,

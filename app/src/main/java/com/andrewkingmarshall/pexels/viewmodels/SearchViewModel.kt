@@ -9,6 +9,7 @@ import com.andrewkingmarshall.pexels.R
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_LIMIT
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGE_START
 import com.andrewkingmarshall.pexels.network.service.PexelApiService.Companion.PAGING_THRESHOLD
+import com.andrewkingmarshall.pexels.repository.PAGING_TAG
 import com.andrewkingmarshall.pexels.repository.SearchRepository
 import com.andrewkingmarshall.pexels.ui.domainmodels.MediaItem
 import com.andrewkingmarshall.pexels.util.SingleLiveEvent
@@ -51,6 +52,7 @@ class SearchViewModel @Inject constructor(
                         // based on the screen's width
                         displayData.add(
                             MediaItem(
+                                it.imageId,
                                 it.mediumUrl,
                                 it.largeUrl,
                                 it.avgColor,
@@ -75,12 +77,13 @@ class SearchViewModel @Inject constructor(
      * @param position The position that is being bound.
      */
     fun onItemBound(position: Int) {
-        Timber.v("onItemBound: $position")
+        Timber.tag(PAGING_TAG).v("onItemBound: $position")
 
         if ((position + PAGING_THRESHOLD) % PAGE_LIMIT == 0) {
             val nextPage = ((position + PAGING_THRESHOLD) / PAGE_LIMIT) + PAGE_START
 
-            Timber.d("Paging threshold reached. Get the next page: $nextPage")
+            Timber.tag(PAGING_TAG).d("Paging threshold reached. Get the next page: $nextPage")
+            Timber.tag(PAGING_TAG).d("Position: $position")
 
             currentSearchQuery.value?.let {
                 executeSearch(it, nextPage)
