@@ -40,16 +40,9 @@ class SearchViewModel @Inject constructor(
 
     val searchResults: LiveData<List<MediaItem>> =
         Transformations.switchMap(currentSearchQuery) { searchQuery ->
-            searchRepository.getSearchQueryWithImagesFlow(searchQuery)
-                .map {
-                    if (it.isNullOrEmpty() || it.first().images.isNullOrEmpty()) {
-                        emptyList()
-                    } else {
-                        it.first().images
-                    }
-                }.map {
-                    it.sortedBy { image -> image.serverOrder }
-                }.map { imageList ->
+            searchRepository.getImageFlowForSearchQuery(searchQuery)
+                .map { imageList ->
+                    // Map the database object to UI Domain objects
                     val displayData = ArrayList<MediaItem>()
                     imageList.forEach {
                         //todo: You could do more logic here to better determine which Url to use

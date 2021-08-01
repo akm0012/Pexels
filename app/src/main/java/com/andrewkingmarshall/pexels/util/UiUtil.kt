@@ -10,8 +10,7 @@ fun hideKeyboard(activity: Activity) {
 
     //Find the currently focused view, so we can grab the correct window token from it.
     var view = activity.currentFocus
-    //I
-    // f no view currently has focus, create a new one, just so we can grab a window token from it
+    //If no view currently has focus, create a new one, just so we can grab a window token from it
     if (view == null) {
         view = View(activity)
     }

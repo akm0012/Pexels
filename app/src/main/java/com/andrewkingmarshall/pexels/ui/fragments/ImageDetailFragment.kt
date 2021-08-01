@@ -17,6 +17,9 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 
+/**
+ * Shows a higher resolution version of the image clicked on in the [MediaGridFragment].
+ */
 class ImageDetailFragment :
     BaseFragment<FragmentImageDetailBinding>(FragmentImageDetailBinding::inflate) {
 

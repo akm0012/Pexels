@@ -22,7 +22,7 @@ const val MIN_SCALE = 1.0f
 /**
  * This custom ImageView will allow the user to pinch to zoom and pan around an Image.
  *
- * It still could use some polish especially when panning an image off screen.
+ * It still could use some polish especially when preventing a user from panning an image off screen.
  *
  * Credit: I took a lot of inspiration from these sources and used them to better understand the
  *         concepts. Some helper functions were copied from other sources, but the 'meat' of this
@@ -140,7 +140,10 @@ class PinchToZoomImageView : AppCompatImageView {
     private val scaleDetector = ScaleGestureDetector(context, scaleListener)
 
     /**
-     * Listens for all touch events on this View.
+     * Listens for all touch events on this View. This is where the panning logic occurs.
+     *
+     * Much of this code is designed to track the active pointer and determining how far that pointer
+     * has moved across the screen.
      */
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {

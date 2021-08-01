@@ -30,6 +30,15 @@ const val PAGING_TAG = "paging"
 
 const val DELAY_UNTIL_SEARCH_RETRY_MILLIS = 10 * 1000L // 10 seconds
 
+/**
+ * This repository is used to access all the objects that are produced from a Search.
+ *
+ * @property pexelApiService The API service where our photos come from.
+ * @property imageDao The Data Access Object used to save [Images][Image] to our database.
+ * @property searchDao The Data Access Object used to save [SearchQueries][SearchQuery]
+ * @property searchHistoryCache A cache used to better optimize network performance by reducing the number
+ *                              of duplicate network calls being made.
+ */
 @Singleton
 class SearchRepository @Inject constructor(
     private val pexelApiService: PexelApiService,
@@ -42,10 +51,32 @@ class SearchRepository @Inject constructor(
     private val sanityCheckListIds = ArrayList<String>()
     private val sanityCheckListUrlPreview = ArrayList<String>()
 
-    fun getSearchQueryWithImagesFlow(searchQuery: String): Flow<List<SearchQueryWithImages>?> {
-        return searchDao.getSearchQueryWithImages(searchQuery.lowercase())
+    /**
+     * Gets a [Flow] of [Images][Image] that match a specific [SearchQuery].
+     *
+     * @param searchQuery The image search query
+     * @return A Flow of Images for a specific search query
+     */
+    fun getImageFlowForSearchQuery(searchQuery: String): Flow<List<Image>> {
+        return searchDao.getSearchQueryWithImages(searchQuery.lowercase()).map {
+            // Get the list of Images from the list of SearchQueryWithImages
+            if (it.isNullOrEmpty() || it.first().images.isNullOrEmpty()) {
+                emptyList()
+            } else {
+                it.first().images
+            }
+        }.map {
+            // FIXME: There has got to be a way to do this in the database layer
+            it.sortedBy { image -> image.serverOrder }
+        }
     }
 
+    /**
+     * Searches the Pexel API for [Images][Image] that match the supplied query.
+     *
+     * @param _searchQuery The search query
+     * @param page The page number that you want to request from the API
+     */
     suspend fun executeSearch(_searchQuery: String, page: Int = PAGE_START) {
         val searchQuery = _searchQuery.lowercase()
 
@@ -71,8 +102,6 @@ class SearchRepository @Inject constructor(
                 val imagesToSave = ArrayList<Image>()
                 val imageSearchCrossRefsToSave = ArrayList<ImageSearchCrossRef>()
                 val searchToSave = SearchQuery(searchQuery, getCurrentTimeInSec())
-
-                // Todo: Remove akm tags
 
                 // Convert the Dtos into Database objects
                 imageSearchResponse.photos.forEachIndexed { index, dto ->

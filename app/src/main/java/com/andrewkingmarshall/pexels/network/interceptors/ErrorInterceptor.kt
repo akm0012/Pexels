@@ -9,6 +9,10 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
+/**
+ * Intercepts network calls and checks if any errors occurred.
+ *
+ */
 class ErrorInterceptor(private val context: Context) : Interceptor {
 
     @Throws(NetworkException::class)

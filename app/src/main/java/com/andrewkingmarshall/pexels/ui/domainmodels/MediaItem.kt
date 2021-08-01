@@ -5,6 +5,9 @@ import java.io.Serializable
 /**
  * A Domain Model that represents a single media item.
  *
+ * Currently only Photos are supported, but this could be modified to include videos with minimal
+ * code changes.
+ *
  * @property mediaId The ID of it's original media item.
  * @property urlPreview The Url to use when loading a preview image.
  * @property urlFullScreen The Url used when loading a full screen image.

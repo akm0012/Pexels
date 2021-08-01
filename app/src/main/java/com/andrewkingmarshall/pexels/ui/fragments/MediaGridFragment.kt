@@ -22,6 +22,12 @@ import com.andrewkingmarshall.pexels.util.hideKeyboard
 import com.andrewkingmarshall.pexels.viewmodels.SearchViewModel
 import timber.log.Timber
 
+/**
+ * This is where the list of media results will be shown in a grid.
+ *
+ * Clicking on a photo will take you to the Image Detail screen.
+ *
+ */
 class MediaGridFragment :
     BaseFragment<FragmentMediaGridBinding>(FragmentMediaGridBinding::inflate) {
 

@@ -17,6 +17,10 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 
+/**
+ * This adapter is responsible for showing preview images.
+ *
+ */
 class MediaAdapter :
     ListAdapter<MediaItem, MediaAdapter.ViewHolder>(MediaItemDiffCallback()) {
 
@@ -38,6 +42,9 @@ class MediaAdapter :
 
     var onBindListener: OnBindListener? = null
 
+    /**
+     * An interface used to listen to when an image is done loading.
+     */
     interface OnLoadListener {
         fun onLoadCompleted()
     }
@@ -78,7 +85,7 @@ class MediaAdapter :
                 requestLayout()
             }
 
-            // Set the transition name for cool animations
+            // Set the transition name for cool animations when navigating to the Detail Screen
             imageView.transitionName = mediaItem.urlFullScreen
 
             // Set the background to the average color while the image loads

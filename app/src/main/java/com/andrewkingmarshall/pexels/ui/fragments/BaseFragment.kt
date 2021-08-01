@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
 /**
- * This Base Fragment make View Binding much easier.
+ * This Base Fragment makes View Binding much easier.
  *
  * [Credit](https://chetangupta.net/viewbinding/#base)
  *
