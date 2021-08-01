@@ -8,7 +8,8 @@ It showcases some advanced Android topics including:
 - Jetpack Navigation Components 
 - Jetpack Work Manager 
 - MVVM Architecture 
-- Offline First  
+- Offline First
+  - Try repeating some past searches with your WiFi off  
 - A home grown "Pinch To Zoom" custom ImageView (Dust off your Algebra textbooks...)
 - Fragment Transitions with Shared Elements (with some help from [this](https://medium.com/@serbelga/shared-elements-in-android-navigation-architecture-component-bc5e7922ecdf) article)
 
