@@ -21,8 +21,16 @@ interface SearchDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImageSearchCrossRefs(searchCrossRefs: List<ImageSearchCrossRef>)
 
+    @Query("SELECT * FROM SearchQuery WHERE dateSearched < :createDateSeconds")
+    fun getSearchesCreatedBefore(
+        createDateSeconds: Long,
+    ): Flow<List<SearchQuery>>
+
     // FIXME: Can I sort by Image.serverOrder here? Would save processing in ViewModel
     @Transaction
     @Query("SELECT * FROM SearchQuery WHERE searchQuery = :searchQuery")
     fun getSearchQueryWithImages(searchQuery: String): Flow<List<SearchQueryWithImages>?>
+
+    @Delete
+    suspend fun deleteSearches(searchesToDelete: List<SearchQuery>)
 }
